@@ -1,0 +1,14 @@
+{
+  "expo": {
+    "name": "CoffeeAdmin",
+    "slug": "coffeeadmin-movil",
+    "version": "1.0.0",
+    "orientation": "default",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "backgroundColor": "#4a2f20"
+    },
+    "ios": { "supportsTablet": true },
+    "android": { "package": "mx.upq.coffeeadmin" }
+  }
+}
