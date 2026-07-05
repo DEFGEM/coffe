@@ -229,3 +229,17 @@
 {"_e":"metro:client_log","_t":1783210405669,"level":"log","data":["Running application \"main\" with appParams:\n","{\"hydrate\": undefined, \"rootTag\": \"#root\"}","\nDevelopment-level warnings: ON.\nPerformance optimizations: OFF."]}
 {"_e":"metro:client_log","_t":1783210405672,"level":"warn","data":["\"shadow*\" style props are deprecated. Use \"boxShadow\"."]}
 {"_e":"metro:client_log","_t":1783210405673,"level":"warn","data":["props.pointerEvents is deprecated. Use style.pointerEvents"]}
+{"_e":"metro:bundling:started","_t":1783211917430,"id":"3","platform":"web","environment":null,"entry":"node_modules/expo/AppEntry.js"}
+{"_e":"metro:bundling:progress","_t":1783211917430,"id":"3","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:done","_t":1783211917442,"id":"3","total":1,"ms":11.8669}
+{"_e":"metro:client_log","_t":1783211917632,"level":"info","data":["%cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools","font-weight:bold"]}
+{"_e":"metro:client_log","_t":1783211917634,"level":"log","data":["Running application \"main\" with appParams:\n","{\"hydrate\": undefined, \"rootTag\": \"#root\"}","\nDevelopment-level warnings: ON.\nPerformance optimizations: OFF."]}
+{"_e":"metro:client_log","_t":1783211917634,"level":"warn","data":["\"shadow*\" style props are deprecated. Use \"boxShadow\"."]}
+{"_e":"metro:client_log","_t":1783211917634,"level":"warn","data":["props.pointerEvents is deprecated. Use style.pointerEvents"]}
+{"_e":"metro:bundling:started","_t":1783212172020,"id":"5","platform":"web","environment":null,"entry":"node_modules/expo/AppEntry.js"}
+{"_e":"metro:bundling:progress","_t":1783212172020,"id":"5","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:done","_t":1783212172044,"id":"5","total":1,"ms":23.935033}
+{"_e":"metro:client_log","_t":1783212172213,"level":"info","data":["%cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools","font-weight:bold"]}
+{"_e":"metro:client_log","_t":1783212172213,"level":"log","data":["Running application \"main\" with appParams:\n","{\"hydrate\": undefined, \"rootTag\": \"#root\"}","\nDevelopment-level warnings: ON.\nPerformance optimizations: OFF."]}
+{"_e":"metro:client_log","_t":1783212172213,"level":"warn","data":["\"shadow*\" style props are deprecated. Use \"boxShadow\"."]}
+{"_e":"metro:client_log","_t":1783212172214,"level":"warn","data":["props.pointerEvents is deprecated. Use style.pointerEvents"]}

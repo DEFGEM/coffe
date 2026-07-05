@@ -13,6 +13,7 @@ export function LoginScreen() {
   const { setUsuario, irInicio } = useStore();
   const [correo, setCorreo] = useState('');
   const [password, setPassword] = useState('');
+  const [mostrarPassword, setMostrarPassword] = useState(false);
 
   const ingresar = () => {
     // RF-03: Alertas — campos vacíos
@@ -46,7 +47,16 @@ export function LoginScreen() {
         {/* RF-01: Inputs */}
         <Campo placeholder="✉️  Correo o usuario" value={correo} onChangeText={setCorreo}
                autoCapitalize="none" keyboardType="email-address" />
-        <Campo placeholder="🔒  Contraseña" value={password} onChangeText={setPassword} secureTextEntry />
+        <View style={ls.passwordContenedor}>
+          <Campo placeholder="🔒  Contraseña" value={password} onChangeText={setPassword}
+            secureTextEntry={!mostrarPassword} style={{ paddingRight: 52 }} />
+          <TouchableOpacity
+            accessibilityLabel={mostrarPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+            style={ls.passwordBoton}
+            onPress={() => setMostrarPassword((valor) => !valor)}>
+            <Text style={ls.passwordIcono}>{mostrarPassword ? '🙈' : '👁️'}</Text>
+          </TouchableOpacity>
+        </View>
 
         {/* RF-02: Botón de inicio de sesión */}
         <Boton texto="Iniciar sesión  →" onPress={ingresar} />
@@ -55,6 +65,24 @@ export function LoginScreen() {
         <View style={ls.pieCard}>
           <Text style={ls.pieCardTitulo}>Tu cafetería de confianza</Text>
           <Text style={ls.pieCardSub}>Cálido y sencillo para pasar un buen rato</Text>
+        </View>
+
+        <View style={ls.credenciales}>
+          <Text style={ls.credTitulo}>Credenciales de prueba</Text>
+          <Text style={ls.credNota}>Selecciona cualquiera de los roles disponibles</Text>
+          {USUARIOS.map((u) => (
+            <TouchableOpacity key={u.id} style={ls.credFila}
+              onPress={() => { setCorreo(u.email); setPassword(u.password); }}>
+              <View style={{ flex: 1 }}>
+                <Text style={ls.credRol}>{u.rol}</Text>
+                <Text style={ls.credDato}>{u.email}</Text>
+              </View>
+              <View style={ls.credPassword}>
+                <Text style={ls.credPasswordTexto}>{u.password}</Text>
+              </View>
+            </TouchableOpacity>
+          ))}
+          <Text style={ls.credAyuda}>Toca una cuenta para llenar automáticamente los campos.</Text>
         </View>
         </View>
       </ScrollView>
@@ -151,6 +179,18 @@ const crearLs = (C) => StyleSheet.create({
   pieCard: { backgroundColor: C.crema2, borderRadius: 16, padding: 13, marginTop: 18, alignItems: 'center' },
   pieCardTitulo: { fontWeight: '800', color: C.texto, fontSize: 12.5 },
   pieCardSub: { color: C.textoSuave, fontSize: 11, marginTop: 2 },
+  passwordContenedor: { position: 'relative' },
+  passwordBoton: { position: 'absolute', right: 5, top: 2, width: 44, height: 44, alignItems: 'center', justifyContent: 'center', zIndex: 2 },
+  passwordIcono: { fontSize: 17 },
+  credenciales: { backgroundColor: C.superficie, borderRadius: 18, padding: 14, marginTop: 16 },
+  credTitulo: { color: C.texto, fontSize: 15, fontWeight: '900' },
+  credNota: { color: C.textoSuave, fontSize: 11, marginTop: 2, marginBottom: 8 },
+  credFila: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 9, borderBottomWidth: 1, borderBottomColor: C.linea },
+  credRol: { color: C.texto, fontSize: 12.5, fontWeight: '800' },
+  credDato: { color: C.textoSuave, fontSize: 10.5, marginTop: 2 },
+  credPassword: { backgroundColor: C.crema2, borderRadius: 9, paddingHorizontal: 9, paddingVertical: 6 },
+  credPasswordTexto: { color: C.cafe, fontSize: 11, fontWeight: '800' },
+  credAyuda: { color: C.textoSuave, fontSize: 10.5, textAlign: 'center', marginTop: 10 },
   modGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   modCard: { width: '48%', minHeight: 182 },
   modIcono: { width: 42, height: 42, borderRadius: 13, backgroundColor: C.crema2, alignItems: 'center', justifyContent: 'center' },

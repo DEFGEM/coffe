@@ -5,7 +5,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { estadoColor, useTheme } from '../theme';
 import { useStore } from '../store';
-import { esAdmin, inicioPorRol } from '../navigation';
+import { esAdmin } from '../navigation';
 
 const useUI = () => {
   const tema = useTheme();
@@ -263,45 +263,40 @@ export function BarraInferior() {
   const { irInicio, actual, usuario } = useStore();
   const { s } = useUI();
   const pantalla = actual.pantalla;
-  const inicio = inicioPorRol(usuario?.rol);
-  const grupo = pantalla.startsWith('caja') ? 'caja'
-    : pantalla.startsWith('cocina') ? 'cocina'
-      : pantalla.startsWith('mesero') ? 'mesero' : 'general';
-  const items = {
-    general: [
-      { rutas: ['dashboard'], icono: '🏠', texto: 'Inicio', ruta: inicio },
-      { rutas: ['meseroPedidos'], icono: '🧾', texto: 'Pedidos', ruta: 'meseroPedidos' },
-      { rutas: ['cocinaInventario'], icono: '📦', texto: 'Stock', ruta: 'cocinaInventario' },
-      { rutas: [], icono: '👤', texto: 'Perfil' },
+  const barrasPorRol = {
+    Admin: [
+      { rutas: ['dashboard'], icono: '🏠', texto: 'Inicio', ruta: 'dashboard' },
+      { rutas: ['meseroDash', 'meseroRealizar', 'meseroPedidos', 'meseroMarketing'], icono: '🛎️', texto: 'Mesero', ruta: 'meseroDash' },
+      { rutas: ['cajaDash', 'cajaPedidos', 'cajaPago', 'cajaTicket', 'cajaCuentas', 'cajaCompras'], icono: '💵', texto: 'Caja', ruta: 'cajaDash' },
+      { rutas: ['cocinaDash', 'cocinaPedidos', 'cocinaInventario', 'cocinaMenu'], icono: '👨‍🍳', texto: 'Cocina', ruta: 'cocinaDash' },
     ],
-    caja: [
-      { rutas: [inicio], icono: '🏠', texto: 'Inicio', ruta: inicio },
-      { rutas: ['cajaDash', 'cajaCuentas', 'cajaCompras'], icono: '💵', texto: 'Caja', ruta: 'cajaDash' },
+    Mesero: [
+      { rutas: ['meseroDash'], icono: '🏠', texto: 'Inicio', ruta: 'meseroDash' },
+      { rutas: ['meseroRealizar'], icono: '📝', texto: 'Realizar', ruta: 'meseroRealizar' },
+      { rutas: ['meseroPedidos'], icono: '🧾', texto: 'Mis pedidos', ruta: 'meseroPedidos' },
+      { rutas: ['meseroMarketing'], icono: '📣', texto: 'Marketing', ruta: 'meseroMarketing' },
+    ],
+    Cajero: [
+      { rutas: ['cajaDash'], icono: '🏠', texto: 'Inicio', ruta: 'cajaDash' },
       { rutas: ['cajaPedidos', 'cajaPago', 'cajaTicket'], icono: '🧾', texto: 'Pedidos', ruta: 'cajaPedidos' },
-      { rutas: [], icono: '👤', texto: 'Perfil' },
+      { rutas: ['cajaCuentas'], icono: '💳', texto: 'Cuentas', ruta: 'cajaCuentas' },
+      { rutas: ['cajaCompras'], icono: '🛒', texto: 'Compras', ruta: 'cajaCompras' },
     ],
-    cocina: [
-      { rutas: [inicio], icono: '🏠', texto: 'Inicio', ruta: inicio },
-      { rutas: ['cocinaDash', 'cocinaPedidos'], icono: '👨‍🍳', texto: 'Cocina', ruta: 'cocinaDash' },
-      { rutas: ['cocinaInventario', 'cocinaMenu'], icono: '📦', texto: 'Stock', ruta: 'cocinaInventario' },
-      { rutas: [], icono: '👤', texto: 'Perfil' },
+    Cocinero: [
+      { rutas: ['cocinaDash'], icono: '🏠', texto: 'Inicio', ruta: 'cocinaDash' },
+      { rutas: ['cocinaPedidos'], icono: '🍳', texto: 'Pedidos', ruta: 'cocinaPedidos' },
+      { rutas: ['cocinaInventario'], icono: '📦', texto: 'Inventario', ruta: 'cocinaInventario' },
+      { rutas: ['cocinaMenu'], icono: '🍽️', texto: 'Menú', ruta: 'cocinaMenu' },
     ],
-    mesero: [
-      { rutas: [inicio], icono: '🏠', texto: 'Inicio', ruta: inicio },
-      { rutas: ['meseroDash', 'meseroRealizar', 'meseroPedidos'], icono: '📝', texto: 'Pedidos', ruta: 'meseroDash' },
-      { rutas: ['meseroMarketing'], icono: '📣', texto: 'Promo', ruta: 'meseroMarketing' },
-      { rutas: [], icono: '👤', texto: 'Perfil' },
-    ],
-  }[grupo];
+  };
+  const items = barrasPorRol[usuario?.rol] || barrasPorRol.Admin;
 
   return (
     <View style={s.barraInf}>
       {items.map((it) => {
         const activa = it.rutas.includes(pantalla);
         return (
-          <TouchableOpacity key={it.texto} disabled={!it.ruta}
-            style={[s.barraItem, !it.ruta && { opacity: 0.45 }]}
-            onPress={() => it.ruta && irInicio(it.ruta)}>
+          <TouchableOpacity key={it.texto} style={s.barraItem} onPress={() => irInicio(it.ruta)}>
             <Text style={[s.barraIcono, !activa && { opacity: 0.5 }]}>{it.icono}</Text>
             <Text style={[s.barraTexto, activa && s.barraTextoActiva]}>{it.texto}</Text>
           </TouchableOpacity>
