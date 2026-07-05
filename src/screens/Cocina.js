@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { View, Text, Alert, StyleSheet } from 'react-native';
 import { useColors } from '../theme';
-import { useStore } from '../store';
+import { esDeHoy, useStore } from '../store';
 import {
   Header, Banner, KpiFila, Tarjeta, TituloSec, Boton, Campo,
   Selector, ChipEstado, ModalCard, Pantalla, TabsModulo,
@@ -15,9 +15,10 @@ export function CocinaDashboard() {
   const C = useColors();
   const ks = crearKs(C);
   const { pedidos, inventario, navegar } = useStore();
-  const pagados = pedidos.filter((p) => p.estado === 'pagado').length;
-  const enPrep = pedidos.filter((p) => p.estado === 'en_preparacion').length;
-  const listos = pedidos.filter((p) => p.estado === 'listo').length;
+  const pedidosHoy = pedidos.filter(esDeHoy);
+  const pagados = pedidosHoy.filter((p) => p.estado === 'pagado').length;
+  const enPrep = pedidosHoy.filter((p) => p.estado === 'en_preparacion').length;
+  const listos = pedidosHoy.filter((p) => p.estado === 'listo').length;
   const stockBajo = inventario.filter((i) => i.stock <= i.minimo).length;
 
   return (

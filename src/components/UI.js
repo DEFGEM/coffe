@@ -5,6 +5,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { estadoColor, useTheme } from '../theme';
 import { useStore } from '../store';
+import { esAdmin, inicioPorRol } from '../navigation';
 
 const useUI = () => {
   const tema = useTheme();
@@ -48,10 +49,13 @@ export function Header({ modulo, titulo, subtitulo, icono = '☕' }) {
                 <Text style={s.menuUsuario}>{usuario?.nombre} · {usuario?.rol}</Text>
               </View>
             </View>
-            <MenuItem s={s} texto="🏠  Dashboard general" onPress={() => ir('dashboard')} />
-            <MenuItem s={s} texto="🛎️  Cliente / Mesero" onPress={() => ir('meseroDash')} />
-            <MenuItem s={s} texto="💵  Caja" onPress={() => ir('cajaDash')} />
-            <MenuItem s={s} texto="👨‍🍳  Cocina" onPress={() => ir('cocinaDash')} />
+            {esAdmin(usuario) ? <MenuItem s={s} texto="🏠  Dashboard general" onPress={() => ir('dashboard')} /> : null}
+            {esAdmin(usuario) || usuario?.rol === 'Mesero'
+              ? <MenuItem s={s} texto="🛎️  Cliente / Mesero" onPress={() => ir('meseroDash')} /> : null}
+            {esAdmin(usuario) || usuario?.rol === 'Cajero'
+              ? <MenuItem s={s} texto="💵  Caja" onPress={() => ir('cajaDash')} /> : null}
+            {esAdmin(usuario) || usuario?.rol === 'Cocinero'
+              ? <MenuItem s={s} texto="👨‍🍳  Cocina" onPress={() => ir('cocinaDash')} /> : null}
 
             <View style={s.temaFila}>
               <View style={{ flex: 1 }}>
@@ -87,7 +91,7 @@ const MenuItem = ({ texto, onPress, s }) => (
 );
 
 export function TabsModulo({ modulo, activa }) {
-  const { irInicio } = useStore();
+  const { reemplazar } = useStore();
   const { s } = useUI();
   const grupos = {
     caja: [
@@ -111,7 +115,7 @@ export function TabsModulo({ modulo, activa }) {
     <View style={s.tabs}>
       {grupos[modulo].map((tab) => (
         <TouchableOpacity key={tab.id} style={[s.tab, activa === tab.id && s.tabActiva]}
-          onPress={() => irInicio(tab.ruta)}>
+          onPress={() => reemplazar(tab.ruta)}>
           <Text style={[s.tabTexto, activa === tab.id && s.tabTextoActivo]}>{tab.texto}</Text>
         </TouchableOpacity>
       ))}
@@ -256,36 +260,37 @@ export function ModalCard({ visible, onCerrar, titulo, children }) {
 }
 
 export function BarraInferior() {
-  const { irInicio, actual } = useStore();
+  const { irInicio, actual, usuario } = useStore();
   const { s } = useUI();
   const pantalla = actual.pantalla;
+  const inicio = inicioPorRol(usuario?.rol);
   const grupo = pantalla.startsWith('caja') ? 'caja'
     : pantalla.startsWith('cocina') ? 'cocina'
       : pantalla.startsWith('mesero') ? 'mesero' : 'general';
   const items = {
     general: [
-      { rutas: ['dashboard'], icono: '🏠', texto: 'Inicio', ruta: 'dashboard' },
+      { rutas: ['dashboard'], icono: '🏠', texto: 'Inicio', ruta: inicio },
       { rutas: ['meseroPedidos'], icono: '🧾', texto: 'Pedidos', ruta: 'meseroPedidos' },
       { rutas: ['cocinaInventario'], icono: '📦', texto: 'Stock', ruta: 'cocinaInventario' },
-      { rutas: [], icono: '👤', texto: 'Perfil', ruta: 'dashboard' },
+      { rutas: [], icono: '👤', texto: 'Perfil' },
     ],
     caja: [
-      { rutas: ['dashboard'], icono: '🏠', texto: 'Inicio', ruta: 'dashboard' },
+      { rutas: [inicio], icono: '🏠', texto: 'Inicio', ruta: inicio },
       { rutas: ['cajaDash', 'cajaCuentas', 'cajaCompras'], icono: '💵', texto: 'Caja', ruta: 'cajaDash' },
       { rutas: ['cajaPedidos', 'cajaPago', 'cajaTicket'], icono: '🧾', texto: 'Pedidos', ruta: 'cajaPedidos' },
-      { rutas: [], icono: '👤', texto: 'Perfil', ruta: 'cajaDash' },
+      { rutas: [], icono: '👤', texto: 'Perfil' },
     ],
     cocina: [
-      { rutas: ['dashboard'], icono: '🏠', texto: 'Inicio', ruta: 'dashboard' },
+      { rutas: [inicio], icono: '🏠', texto: 'Inicio', ruta: inicio },
       { rutas: ['cocinaDash', 'cocinaPedidos'], icono: '👨‍🍳', texto: 'Cocina', ruta: 'cocinaDash' },
       { rutas: ['cocinaInventario', 'cocinaMenu'], icono: '📦', texto: 'Stock', ruta: 'cocinaInventario' },
-      { rutas: [], icono: '👤', texto: 'Perfil', ruta: 'cocinaDash' },
+      { rutas: [], icono: '👤', texto: 'Perfil' },
     ],
     mesero: [
-      { rutas: ['dashboard'], icono: '🏠', texto: 'Inicio', ruta: 'dashboard' },
+      { rutas: [inicio], icono: '🏠', texto: 'Inicio', ruta: inicio },
       { rutas: ['meseroDash', 'meseroRealizar', 'meseroPedidos'], icono: '📝', texto: 'Pedidos', ruta: 'meseroDash' },
       { rutas: ['meseroMarketing'], icono: '📣', texto: 'Promo', ruta: 'meseroMarketing' },
-      { rutas: [], icono: '👤', texto: 'Perfil', ruta: 'meseroDash' },
+      { rutas: [], icono: '👤', texto: 'Perfil' },
     ],
   }[grupo];
 
@@ -294,7 +299,9 @@ export function BarraInferior() {
       {items.map((it) => {
         const activa = it.rutas.includes(pantalla);
         return (
-          <TouchableOpacity key={it.texto} style={s.barraItem} onPress={() => irInicio(it.ruta)}>
+          <TouchableOpacity key={it.texto} disabled={!it.ruta}
+            style={[s.barraItem, !it.ruta && { opacity: 0.45 }]}
+            onPress={() => it.ruta && irInicio(it.ruta)}>
             <Text style={[s.barraIcono, !activa && { opacity: 0.5 }]}>{it.icono}</Text>
             <Text style={[s.barraTexto, activa && s.barraTextoActiva]}>{it.texto}</Text>
           </TouchableOpacity>

@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { View, Text, Alert, StyleSheet } from 'react-native';
 import { useColors } from '../theme';
-import { useStore } from '../store';
+import { esDeHoy, fechaActual, useStore } from '../store';
 import {
   Header, Banner, KpiFila, Tarjeta, TituloSec, Boton, Campo,
   Selector, ChipEstado, ModalCard, GraficaBarras, Pantalla, TabsModulo,
@@ -13,8 +13,9 @@ export function CajaDashboard() {
   const C = useColors();
   const cs = crearCs(C);
   const { ventas, gastos, pedidos, navegar } = useStore();
-  const ingresos = ventas.reduce((s, v) => s + v.monto, 0);
-  const egresos = gastos.reduce((s, g) => s + g.monto, 0);
+  const ingresos = ventas.filter(esDeHoy).reduce((s, v) => s + v.monto, 0);
+  const egresos = gastos.filter(esDeHoy).reduce((s, g) => s + g.monto, 0);
+  const pedidosHoy = pedidos.filter(esDeHoy);
 
   return (
     <Pantalla activa="cajaDash">
@@ -22,7 +23,7 @@ export function CajaDashboard() {
       <TabsModulo modulo="caja" />
       <Banner etiqueta="Ventas del día" valor={`$${ingresos.toLocaleString()}.00`} nota="Ingresos registrados en caja" icono="🧾" />
       <KpiFila datos={[
-        { icono: '📋', valor: pedidos.filter((p) => p.estado === 'pendiente').length, etiqueta: 'Pedidos' },
+        { icono: '📋', valor: pedidosHoy.filter((p) => p.estado === 'pendiente').length, etiqueta: 'Pedidos' },
         { icono: '📈', valor: `$${(ingresos - egresos).toLocaleString()}`, etiqueta: 'Ganancia' },
         { icono: '📉', valor: `$${egresos.toLocaleString()}`, etiqueta: 'Gastos' },
       ]} />
@@ -287,9 +288,9 @@ export function CajaCuentas() {
   const C = useColors();
   const cs = crearCs(C);
   const { ventas, gastos, compras } = useStore();
-  const ingresos = ventas.reduce((s, v) => s + v.monto, 0);
-  const egresos = gastos.reduce((s, g) => s + g.monto, 0);
-  const comprasTotal = compras.reduce((s, c) => s + c.costo, 0);
+  const ingresos = ventas.filter(esDeHoy).reduce((s, v) => s + v.monto, 0);
+  const egresos = gastos.filter(esDeHoy).reduce((s, g) => s + g.monto, 0);
+  const comprasTotal = compras.filter(esDeHoy).reduce((s, c) => s + c.costo, 0);
   const ganancia = ingresos - egresos;
 
   return (
@@ -331,8 +332,8 @@ export function CajaCompras() {
   const [insumo, setInsumo] = useState('');
   const [cantidad, setCantidad] = useState('');
   const [precio, setPrecio] = useState('');
-  const [fecha, setFecha] = useState('2026-06-10');
-  const gastoDia = compras.reduce((s, c) => s + c.costo, 0);
+  const [fecha, setFecha] = useState(fechaActual);
+  const gastoDia = compras.filter(esDeHoy).reduce((s, c) => s + c.costo, 0);
 
   const registrar = () => {
     const cant = parseFloat(cantidad), costo = parseFloat(precio);

@@ -1,8 +1,8 @@
 // Módulo Cliente / Mesero — Dashboard, Realizar pedido y Mis pedidos
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, Alert, TouchableOpacity, StyleSheet } from 'react-native';
 import { useColors } from '../theme';
-import { useStore } from '../store';
+import { esDeHoy, useStore } from '../store';
 import {
   Header, Banner, KpiFila, Tarjeta, TituloSec, Boton, Campo,
   Selector, ChipEstado, Pantalla, TabsModulo,
@@ -13,10 +13,12 @@ export function MeseroDashboard() {
   const C = useColors();
   const ms = crearMs(C);
   const { pedidos, navegar, usuario } = useStore();
-  const hoy = pedidos.length;
-  const enCurso = pedidos.filter((p) => ['pendiente', 'pagado', 'en_preparacion'].includes(p.estado)).length;
-  const listos = pedidos.filter((p) => p.estado === 'listo').length;
-  const entregados = pedidos.filter((p) => p.estado === 'entregado').length;
+  const asignados = usuario?.rol === 'Admin' ? pedidos : pedidos.filter((p) => p.mesero === usuario?.nombre);
+  const pedidosHoy = asignados.filter(esDeHoy);
+  const hoy = pedidosHoy.length;
+  const enCurso = pedidosHoy.filter((p) => ['pendiente', 'pagado', 'en_preparacion'].includes(p.estado)).length;
+  const listos = pedidosHoy.filter((p) => p.estado === 'listo').length;
+  const entregados = pedidosHoy.filter((p) => p.estado === 'entregado').length;
 
   return (
     <Pantalla activa="meseroDash">
@@ -62,17 +64,32 @@ export function MeseroDashboard() {
 export function MeseroRealizar() {
   const C = useColors();
   const ms = crearMs(C);
-  const { menu, mesas, mesasOcupadas, crearPedido, usuario, regresar, navegar } = useStore();
+  const {
+    menu, mesas, mesasOcupadas, crearPedido, usuario, regresar, navegar,
+    promocionSugerida, aplicarPromocionSugerida,
+  } = useStore();
   const [mesa, setMesa] = useState(null);
   const [cantidades, setCantidades] = useState({});      // RF-02: Input cantidad
   const [observaciones, setObservaciones] = useState(''); // RF-03: Textarea
+  const [preciosPromocion, setPreciosPromocion] = useState({});
+
+  useEffect(() => {
+    if (!promocionSugerida) return;
+    const cantidad = promocionSugerida.cantidad || 1;
+    setCantidades((actual) => ({ ...actual, [promocionSugerida.productoId]: cantidad }));
+    setPreciosPromocion((actual) => ({
+      ...actual,
+      [promocionSugerida.productoId]: promocionSugerida.precio / cantidad,
+    }));
+    Alert.alert('Promoción aplicada', `“${promocionSugerida.nombre}” se agregó al pedido.`);
+  }, [promocionSugerida]);
 
   const cambiar = (id, delta) =>
     setCantidades((c) => ({ ...c, [id]: Math.max(0, (c[id] || 0) + delta) }));
 
   const items = menu
     .filter((m) => m.disponible && (cantidades[m.id] || 0) > 0)
-    .map((m) => ({ producto: m.nombre, cantidad: cantidades[m.id], precio: m.precio }));
+    .map((m) => ({ producto: m.nombre, cantidad: cantidades[m.id], precio: preciosPromocion[m.id] ?? m.precio }));
   const total = items.reduce((s, i) => s + i.cantidad * i.precio, 0);
 
   const seleccionarMesa = (m) => {
@@ -88,12 +105,13 @@ export function MeseroRealizar() {
     if (!mesa) { Alert.alert('Falta la mesa', 'Selecciona una mesa para el pedido.'); return; }
     if (items.length === 0) { Alert.alert('Pedido vacío', 'Agrega al menos un producto del menú.'); return; }
     const id = crearPedido(mesa, items, observaciones, usuario?.nombre ?? 'Mesero');
+    if (promocionSugerida) aplicarPromocionSugerida();
     // RF-05: Alerta pedido enviado correctamente (el pedido pasa a Caja)
     Alert.alert('✅ Pedido enviado', `Pedido #${id} guardado y enviado a Caja.`, [
       { text: 'Ver mis pedidos', onPress: () => navegar('meseroPedidos') },
       { text: 'OK' },
     ]);
-    setMesa(null); setCantidades({}); setObservaciones('');
+    setMesa(null); setCantidades({}); setPreciosPromocion({}); setObservaciones('');
   };
 
   return (
@@ -119,7 +137,10 @@ export function MeseroRealizar() {
             <Text style={{ fontSize: 18 }}>{m.icono}</Text>
             <View style={{ flex: 1 }}>
               <Text style={{ fontWeight: '700', color: C.texto }}>{m.nombre}</Text>
-              <Text style={{ fontSize: 11.5, color: C.textoSuave }}>${m.precio.toFixed(2)}</Text>
+              <Text style={{ fontSize: 11.5, color: C.textoSuave }}>
+                ${(preciosPromocion[m.id] ?? m.precio).toFixed(2)}
+                {preciosPromocion[m.id] != null ? ' · promoción' : ''}
+              </Text>
             </View>
             <TouchableOpacity style={ms.btnCant} onPress={() => cambiar(m.id, -1)}><Text style={ms.btnCantTxt}>−</Text></TouchableOpacity>
             <Text style={ms.cantidad}>{cantidades[m.id] || 0}</Text>
@@ -150,7 +171,7 @@ export function MeseroRealizar() {
 export function MeseroPedidos() {
   const C = useColors();
   const ms = crearMs(C);
-  const { pedidos, cambiarEstado } = useStore();
+  const { pedidos, cambiarEstado, usuario } = useStore();
 
   const entregar = (p) => {
     // RF-04: Alertas — pedido listo para entregar / entregado
@@ -162,7 +183,8 @@ export function MeseroPedidos() {
     Alert.alert('✅ Pedido entregado', `El pedido #${p.id} fue servido al cliente y marcado como entregado.`);
   };
 
-  const activos = pedidos.filter((p) => p.estado !== 'cancelado');
+  const asignados = usuario?.rol === 'Admin' ? pedidos : pedidos.filter((p) => p.mesero === usuario?.nombre);
+  const activos = asignados.filter((p) => p.estado !== 'cancelado');
 
   return (
     <Pantalla activa="meseroDash">
@@ -201,13 +223,15 @@ export function MeseroPedidos() {
 export function MeseroMarketing() {
   const C = useColors();
   const ms = crearMs(C);
-  const promociones = [
-    { id: 1, nombre: 'Combo desayuno', detalle: 'Café americano + pan dulce', precio: 55, etiqueta: 'Activa', ahorro: 15 },
-    { id: 2, nombre: '2×1 Frappé', detalle: 'Disponible de 3:00 PM a 5:00 PM', precio: 45, etiqueta: 'Horario', ahorro: 45 },
-    { id: 3, nombre: 'Café + croissant', detalle: 'Promoción especial del día', precio: 62, etiqueta: 'Activa', ahorro: 13 },
-  ];
+  const { promociones, sugerirPromocion, navegar } = useStore();
+  const totalSugeridas = promociones.reduce((s, p) => s + p.sugeridas, 0);
+  const totalVendidas = promociones.reduce((s, p) => s + p.vendidas, 0);
+  const aceptacion = totalSugeridas ? Math.round((totalVendidas / totalSugeridas) * 100) : 0;
 
-  const sugerir = (promo) => Alert.alert('📣 Promoción sugerida', `Se sugirió “${promo.nombre}” al cliente.`);
+  const sugerir = (promo) => {
+    sugerirPromocion(promo.id);
+    navegar('meseroRealizar');
+  };
 
   return (
     <Pantalla activa="meseroDash">
@@ -215,9 +239,9 @@ export function MeseroMarketing() {
       <TabsModulo modulo="mesero" activa="marketing" />
       <Banner etiqueta="Promoción activa" valor="Combo desayuno" nota="Café + pan dulce por $55.00" icono="⭐" />
       <KpiFila datos={[
-        { icono: '📣', valor: 4, etiqueta: 'Promos' },
-        { icono: '☕', valor: 18, etiqueta: 'Vendidas' },
-        { icono: '⭐', valor: '92%', etiqueta: 'Aceptación' },
+        { icono: '📣', valor: promociones.length, etiqueta: 'Promos' },
+        { icono: '☕', valor: totalVendidas, etiqueta: 'Vendidas' },
+        { icono: '⭐', valor: `${aceptacion}%`, etiqueta: 'Aceptación' },
       ]} />
 
       <TituloSec nota="Ofrece promociones al levantar pedidos">Promociones para sugerir</TituloSec>

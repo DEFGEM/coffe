@@ -2,7 +2,8 @@
 import React, { useState } from 'react';
 import { View, Text, Alert, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useColors } from '../theme';
-import { useStore, USUARIOS } from '../store';
+import { esDeHoy, useStore, USUARIOS } from '../store';
+import { inicioPorRol } from '../navigation';
 import { Header, Banner, KpiFila, Tarjeta, TituloSec, Boton, Campo, GraficaBarras, Pantalla, ChipEstado, FondoDegradado } from '../components/UI';
 
 // ── LOGIN ───────────────────────────────────────────────────
@@ -30,8 +31,7 @@ export function LoginScreen() {
 
     setUsuario(u);
     // Identificar rol y redirigir al módulo correspondiente (Caso de uso 1)
-    const destino = { Mesero: 'meseroDash', Cajero: 'cajaDash', Cocinero: 'cocinaDash' }[u.rol] || 'dashboard';
-    irInicio(destino);
+    irInicio(inicioPorRol(u.rol));
   };
 
   return (
@@ -67,8 +67,10 @@ export function DashboardScreen() {
   const C = useColors();
   const ls = crearLs(C);
   const { usuario, pedidos, ventas, gastos, inventario, irInicio } = useStore();
-  const activos = pedidos.filter((p) => !['entregado', 'cancelado'].includes(p.estado));
-  const ventasDia = ventas.reduce((s, v) => s + v.monto, 0);
+  const pedidosHoy = pedidos.filter(esDeHoy);
+  const gastosHoy = gastos.filter(esDeHoy);
+  const activos = pedidosHoy.filter((p) => !['entregado', 'cancelado'].includes(p.estado));
+  const ventasDia = ventas.filter(esDeHoy).reduce((s, v) => s + v.monto, 0);
   const stockBajo = inventario.filter((i) => i.stock <= i.minimo).length;
 
   const modulos = [
@@ -86,7 +88,7 @@ export function DashboardScreen() {
       <Banner etiqueta="Resumen del día" valor={`$${ventasDia.toLocaleString()}.00`}
               nota="Ventas registradas hoy" icono="🧾" />
       <KpiFila datos={[
-        { icono: '📋', valor: pedidos.length, etiqueta: 'Pedidos' },
+        { icono: '📋', valor: pedidosHoy.length, etiqueta: 'Pedidos' },
         { icono: '🔥', valor: activos.length, etiqueta: 'Activos' },
         { icono: '⚠️', valor: stockBajo, etiqueta: 'Stock bajo' },
       ]} />
@@ -116,7 +118,7 @@ export function DashboardScreen() {
             <ChipEstado estado={p.estado} />
           </View>
         ))}
-        {gastos.slice(0, 1).map((g) => (
+        {gastosHoy.slice(0, 1).map((g) => (
           <View key={g.id} style={ls.actFila}>
             <Text style={{ flex: 1, color: C.texto, fontSize: 13 }}>{g.descripcion}</Text>
             <Text style={{ color: C.rojo, fontWeight: '700', fontSize: 13 }}>-${g.monto}</Text>

@@ -1,6 +1,6 @@
 // CoffeeAdmin — Aplicación móvil (React Native + Expo)
 // Entrega 1er Parcial · Programación Móvil · Grupo S-203 · UPQ
-import React from 'react';
+import React, { useEffect } from 'react';
 import { SafeAreaView, StatusBar, Platform } from 'react-native';
 import { StoreProvider, useStore } from './src/store';
 import { ThemeProvider, useTheme } from './src/theme';
@@ -8,6 +8,7 @@ import { LoginScreen, DashboardScreen } from './src/screens/Inicio';
 import { MeseroDashboard, MeseroRealizar, MeseroPedidos, MeseroMarketing } from './src/screens/Mesero';
 import { CajaDashboard, CajaPedidos, CajaPago, CajaTicket, CajaCuentas, CajaCompras } from './src/screens/Caja';
 import { CocinaDashboard, CocinaPedidos, CocinaInventario, CocinaMenu } from './src/screens/Cocina';
+import { inicioPorRol, puedeAcceder } from './src/navigation';
 
 const PANTALLAS = {
   login: LoginScreen,
@@ -29,9 +30,18 @@ const PANTALLAS = {
 };
 
 function Router() {
-  const { actual, usuario } = useStore();
+  const { actual, usuario, irInicio } = useStore();
+  const inicio = inicioPorRol(usuario?.rol);
+  const permitida = !!usuario && puedeAcceder(usuario.rol, actual.pantalla);
+
+  useEffect(() => {
+    if (usuario && !permitida) irInicio(inicio);
+  }, [usuario, permitida, inicio, irInicio]);
+
   // Protección de rutas: sin sesión, siempre Login (RNF-05 / RNF-13)
-  const Pantalla = !usuario ? LoginScreen : (PANTALLAS[actual.pantalla] || DashboardScreen);
+  const Pantalla = !usuario
+    ? LoginScreen
+    : (PANTALLAS[permitida ? actual.pantalla : inicio] || DashboardScreen);
   return <Pantalla params={actual.params} />;
 }
 
